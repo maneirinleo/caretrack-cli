@@ -19,5 +19,5 @@ O **CareTrack CLI** é uma aplicação de linha de comando desenvolvida para aux
 
 1. Clone o repositório:
 ```bash
-git clone URL_DO_SEU_REPOSITORIO
+git clone https://github.com/maneirinleo/caretrack-cli
 cd caretrack-cli
