@@ -1,0 +1,9 @@
+[project]
+name = "caretracl-cli"
+version = "1.0.0"
+description = "Assistente de autocuidado para idosos e cuidadores"
+dependencies = []
+
+[tool.ruff]
+line-lenght = 88
+select = ["E", "F", "W"]
