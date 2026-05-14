@@ -5,5 +5,5 @@ description = "Assistente de autocuidado para idosos e cuidadores"
 dependencies = []
 
 [tool.ruff]
-line-lenght = 88
+line-length = 88
 select = ["E", "F", "W"]

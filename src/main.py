@@ -11,30 +11,31 @@ def mostrar_menu():
 def main():
     while True:
         opcao = mostrar_menu()
-        
+
         if opcao == "1":
             nome = input("Nome do medicamento: ")
-            hora = input("Horário (ex: 08:00): ")
-            storage.add_medicamento(nome, hora)
-            print(f"Sucesso! {nome} agendado para {hora}.")
-        
+            horario = input("Horário (ex: 08:00): ")
+            storage.add_medicamento(nome, horario)
+            print(f"Sucesso! {nome} agendado para {horario}.")
+
         elif opcao == "2":
             try:
                 ml = int(input("Quantidade de água consumida (ml): "))
                 storage.add_agua(ml)
-                print(f"Sucesso! {ml}ml de água registrados.")
+                print(f"Sucesso! {ml}ml registrados.")
             except ValueError as e:
                 print(f"Erro: {e}")
-        
+
         elif opcao == "3":
             dados = storage.load_data()
-            print("\n---Resumo do Dia---")
+            print("\n--- Resumo do Dia ---")
             print(f"Água consumida: {dados.get('agua_ml', 0)} ml")
             print("Medicamentos:")
             if not dados.get("medicamentos"):
-                print("Nenhum medicamento registrado.")
-            for med in dados.get("medicamentos", []):
-                print(f" - {med['horario']}: {med['nome']}")
+                print(" Nenhum medicamento registrado.")
+            else:
+                for med in dados.get("medicamentos", []):
+                    print(f" - {med['horario']}: {med['nome']}")
 
         elif opcao == "4":
             print("Saindo do CareTrack. Cuide-se bem!")
@@ -43,4 +44,4 @@ def main():
             print("Opção inválida. Tente novamente.")
 
 if __name__ == "__main__":
-    main()
+        main()

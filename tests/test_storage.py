@@ -1,4 +1,4 @@
-import pytest 
+import pytest
 from src import storage
 
 def test_inicializacao_json(tmp_path):
@@ -8,7 +8,7 @@ def test_inicializacao_json(tmp_path):
     assert dados["agua_ml"] == 0
     assert len(dados["medicamentos"]) == 0
 
-def test_add_medicamento(tmp_path): 
+def test_add_medicamento(tmp_path):
     # Teste 2: Caminho para ser feliz
     arquivo_temp = tmp_path / "teste.json"
     storage.add_medicamento("Losartana", "08:00", arquivo_temp)
