@@ -1,4 +1,5 @@
 import storage
+import api_client
 
 def mostrar_menu():
     print("\n====== CareTrack CLI ======")
@@ -7,6 +8,12 @@ def mostrar_menu():
     print("3. Ver resumo do Dia")
     print("4. Sair")
     return input("Escolha uma opção: ")
+
+def main():
+    print("\n---- Dica de Bem-Estar do Dia ----")
+    dica = api_client.get_daily_tip()
+    print(f"💡 {dica}")
+    print("--------------------------------")
 
 def main():
     while True:
