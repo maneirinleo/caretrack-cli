@@ -1,4 +1,4 @@
-# 🔗 [Acesse o App no Streamlit](https://caretrack-cli-lvfkqt5dyejhqvf5a2fbbw.streamlit.app/)
+# 🔗 [Acesse o App no Streamlit](https://caretrack-cli-1.streamlit.app/)
 
 # CareTrack CLI 💊💧
 ![Versão](https://img.shields.io/badge/version-1.0.0-blue.svg)
