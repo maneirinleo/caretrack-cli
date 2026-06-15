@@ -1,6 +1,7 @@
 import sys
 import os
-# Adiciona o diretório atual ao path para garantir que a importação do storage funcione
+import datetime
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.storage import (
@@ -10,7 +11,9 @@ from src.storage import (
     listar_medicamentos_pendentes,
     marcar_medicamento_tomado,
     salvar_agua,
-    buscar_total_agua_hoje
+    buscar_total_agua_hoje,
+    buscar_historico_agua_semanal,
+    buscar_historico_medicamentos_semanal
 )
 
 META_AGUA = 2000
@@ -20,7 +23,7 @@ def exibir_progresso_agua(consumido):
     
     blocos_cheios = percentual // 5
     blocos_vazios = 20 - blocos_cheios
-    barra = "█" * blocos_cheios + "░" * blocks_vazios if 'blocks_vazios' in locals() else "█" * blocos_cheios + "░" * blocos_vazios
+    barra = "█" * blocos_cheios + "░" * blocos_vazios
     
     print("\n" + "=" * 45)
     print(f"💧 HIDRATAÇÃO DIÁRIA: {consumido}ml / {META_AGUA}ml")
@@ -89,10 +92,9 @@ def confirmar_medicamento_tomado():
             
         med_id_escolhido = int(opcao)
         
-        # Executa a atualização
         sucesso = marcar_medicamento_tomado(med_id_escolhido)
         if sucesso:
-            print("🎉 Parabéns por cuidar da sua saúde! Registro atualizado com sucesso.")
+            print("🎉 Parabéns por cuidar da sua saúde! Registro updated com sucesso.")
         else:
             print("❌ ID de medicamento inválido ou já concluído.")
             
@@ -104,7 +106,6 @@ def confirmar_medicamento_tomado():
 def exibir_resumo():
     print("\n" + "=" * 15 + " RESUMO DO DIA " + "=" * 15)
     
-    # Mostra medicamentos de hoje
     print("\n📋 MEDICAMENTOS AGENDADOS:")
     try:
         medicamentos = listar_medicamentos()
@@ -118,7 +119,6 @@ def exibir_resumo():
     except Exception as e:
         print(f"  Erro ao ler medicamentos: {e}")
         
-    # Mostra água de hoje
     try:
         total_agua = buscar_total_agua_hoje()
         print(f"\n💧 HIDRATAÇÃO TOTAL: {total_agua} ml / {META_AGUA} ml")
@@ -129,6 +129,99 @@ def exibir_resumo():
         
     print("\n" + "=" * 45)
 
+def exibir_resumo_semanal_manual():
+    print("\n" + "=" * 12 + " 📈 RELATÓRIO SEMANAL DE SAÚDE " + "=" * 12)
+    print("Compilado dos dados de consumo e adesão dos últimos 7 dias\n")
+
+    relatorio_diario = {}
+
+    try:
+        dados_agua = buscar_historico_agua_semanal()
+        if dados_agua:
+            for data, quantidade in dados_agua:
+                data_formatada = data.strftime('%d/%m') if isinstance(data, datetime.date) else str(data)
+                if data_formatada not in relatorio_diario:
+                    relatorio_diario[data_formatada] = {"agua": 0, "tomados": 0, "esquecidos": 0, "possui_meds": False}
+                relatorio_diario[data_formatada]["agua"] = quantidade
+    except Exception as e:
+        print(f"❌ Erro ao ler histórico de água: {e}")
+
+    try:
+        dados_meds = buscar_historico_medicamentos_semanal()
+        if dados_meds:
+            for data, concluido, contagem in dados_meds:
+                data_formatada = data.strftime('%d/%m') if isinstance(data, datetime.date) else str(data)
+                if data_formatada not in relatorio_diario:
+                    relatorio_diario[data_formatada] = {"agua": 0, "tomados": 0, "esquecidos": 0, "possui_meds": False}
+                
+                relatorio_diario[data_formatada]["possui_meds"] = True
+                if concluido:
+                    relatorio_diario[data_formatada]["tomados"] += contagem
+                else:
+                    relatorio_diario[data_formatada]["esquecidos"] += contagem
+    except Exception as e:
+        print(f"❌ Erro ao ler histórico de medicamentos: {e}")
+
+    if not relatorio_diario:
+        print("  Nenhum registro de saúde encontrado nos últimos 7 dias.")
+    else:
+        print("📅 DETALHAMENTO DIÁRIO DE METAS:")
+        print("-" * 65)
+        
+        dias_perfeitos = 0
+        total_dias_avaliados = len(relatorio_diario)
+        
+        for data_dia, dados in sorted(relatorio_diario.items()):
+            agua = dados["agua"]
+            tomados = dados["tomados"]
+            esquecidos = dados["esquecidos"]
+            possui_meds = dados["possui_meds"]
+            
+            meta_agua_ok = agua >= META_AGUA
+            meta_meds_ok = True if not possui_meds else (esquecidos == 0 and (tomados > 0 or esquecidos == 0))
+            
+            status_agua = "✅" if meta_agua_ok else "❌"
+            status_meds = "✅" if meta_meds_ok else "❌"
+            
+            if meta_agua_ok and meta_meds_ok:
+                dias_perfeitos += 1
+                status_geral = "⭐ DIA PERFEITO!"
+            else:
+                status_geral = ""
+                
+            print(f"  [{data_dia}] Água: {agua:4}ml {status_agua} | Remédios: (Tomados: {tomados}/Esquecidos: {esquecidos}) {status_meds}  {status_geral}")
+
+        print("\n" + "=" * 20 + " GRÁFICO VISUAL " + "=" * 20)
+        for data_dia, dados in sorted(relatorio_diario.items()):
+            agua = dados["agua"]
+            esquecidos = dados["esquecidos"]
+            possui_meds = dados["possui_meds"]
+            
+            meta_agua_ok = agua >= META_AGUA
+            meta_meds_ok = True if not possui_meds else (esquecidos == 0)
+            
+            caractere_grafico = "■" if (meta_agua_ok and meta_meds_ok) else "□"
+            print(f"  [{data_dia}] {caractere_grafico} Concluído")
+            
+        print("=" * 56)
+        print(f"\n📊 DESEMPENHO ACUMULADO DA SEMANA:")
+        print(f"  Dias em que cumpriu TODAS as metas: {dias_perfeitos} de {total_dias_avaliados}")
+        
+        taxa_sucesso = (dias_perfeitos / total_dias_avaliados * 100) if total_dias_avaliados > 0 else 0
+        print(f"  Taxa de consistência geral: {taxa_sucesso:.1f}%")
+        
+        if taxa_sucesso == 100:
+            print("  🌟 Incrível! Desempenho impecável em todos os dias avaliados!")
+        elif taxa_sucesso >= 70:
+            print("  👍 Excelente nível de consistência! Continue mantendo a rotina firme.")
+        elif taxa_sucesso >= 40:
+            print("  ⚠️ Consistência moderada. Tente reduzir os esquecimentos e focar na hidratação.")
+        else:
+            print("  🚨 Atenção! Nível de cumprimento crítico. Recomenda-se revisar a rotina.")
+
+    print("\n" + "=" * 55 + "\n")
+    input("Pressione [ENTER] para voltar ao menu principal...")
+
 def main():
     try:
         init_db()
@@ -138,7 +231,11 @@ def main():
         sys.exit(1)
 
     while True:
-        total_agua = buscar_total_agua_hoje()
+        try:
+            total_agua = buscar_total_agua_hoje()
+        except:
+            total_agua = 0
+            
         exibir_progresso_agua(total_agua)
         
         print("\n=== Menu CareTrack CLI ===")
@@ -146,9 +243,10 @@ def main():
         print("2. Registrar Consumo de Água (ml)")
         print("3. Ver Resumo Completo do Dia")
         print("4. Confirmar que Tomou um Remédio")
-        print("5. Sair")
+        print("5. Ver Resumo Semanal de Saúde [Novo]")
+        print("6. Sair")
         
-        opcao = input("\nEscolha uma opção (1-5): ").strip()
+        opcao = input("\nEscolha uma opção (1-6): ").strip()
         
         if opcao == "1":
             registrar_novo_medicamento()
@@ -159,10 +257,12 @@ def main():
         elif opcao == "4":
             confirmar_medicamento_tomado()
         elif opcao == "5":
+            exibir_resumo_semanal_manual()
+        elif opcao == "6":
             print("\nObrigado por usar o CareTrack. Cuide bem da sua saúde! Até logo! 👋")
             break
         else:
-            print("❌ Opção inválida! Escolha um número entre 1 e 5.")
+            print("❌ Opção inválida! Escolha um número entre 1 e 6.")
 
 if __name__ == "__main__":
     main()

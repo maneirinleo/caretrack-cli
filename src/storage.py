@@ -8,13 +8,13 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 
 def get_connection():
     if not DATABASE_URL:
-        raise ValueError("Erro: A variável DATABASE_URL não foi encontrada no arquivo .env!")
+        raise ValueError("Erro: A variável DATABASE_URL não foi encontrada no ficheiro .env!")
     return psycopg2.connect(DATABASE_URL)
 
 def init_db():
     conn = get_connection()
     cursor = conn.cursor()
-
+    
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS medicamentos (
             id SERIAL PRIMARY KEY,
@@ -104,3 +104,34 @@ def buscar_total_agua_hoje():
     cursor.close()
     conn.close()
     return resultado[0] if resultado[0] is not None else 0
+
+
+def buscar_historico_agua_semanal():
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT data_registro, SUM(quantidade_ml) as total
+        FROM agua
+        WHERE data_registro >= CURRENT_DATE - INTERVAL '6 days'
+        GROUP BY data_registro
+        ORDER BY data_registro ASC
+    """)
+    historico = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return historico
+
+def buscar_historico_medicamentos_semanal():
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT data_registro, concluido, COUNT(*) as contagem
+        FROM medicamentos
+        WHERE data_registro >= CURRENT_DATE - INTERVAL '6 days'
+        GROUP BY data_registro, concluido
+        ORDER BY data_registro ASC
+    """)
+    historico = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return historico
